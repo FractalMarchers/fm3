@@ -1,5 +1,6 @@
 import * as THREE from './lib/three.module.js';
 const currentShader = 'shaders/basic.frag'; // current fragment shader path
+const mouse = new THREE.Vector4();
 
 /**
  * read a file from the server.
@@ -19,7 +20,6 @@ async function main() {
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
   renderer.autoClearColor = false;
-
   const camera = new THREE.OrthographicCamera(
       -1, // left
       1, // right
@@ -30,8 +30,13 @@ async function main() {
   );
   const scene = new THREE.Scene();
   const plane = new THREE.PlaneGeometry(2, 2);
+  const clock = new THREE.Clock();
+  let currentFrame = 0;
   const uniforms = {
-    iTime: {value: 0},
+    iTime: {value: 0.0},
+    iTimeDelta: {value: 0.0},
+    iFrame: {value: 0},
+    iMouse: {value: new THREE.Vector4()},
     iResolution: {value: new THREE.Vector3()},
   };
   const fragmentShader = await readFile(currentShader);
@@ -67,12 +72,45 @@ async function main() {
     const canvas = renderer.domElement;
     uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
     uniforms.iTime.value = time;
+    uniforms.iTimeDelta.value = clock.getDelta();
+    uniforms.iMouse.value = mouse;
+    uniforms.iFrame.value = currentFrame;
 
     renderer.render(scene, camera);
-
+    currentFrame += 1;
     requestAnimationFrame(render);
   }
-
+  window.addEventListener('mousemove', onMouseMove, false);
+  window.addEventListener('mousedown', onMouseDown, false);
+  window.addEventListener('mouseup', onMouseUp, false);
   requestAnimationFrame(render);
+}
+/**
+ * capture mouse movement
+ * @param {event} event - mouse movement event
+ */
+function onMouseMove( event ) {
+  if (mouse.z === 1) {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+  }
+}
+/**
+ * capture mouse click down
+ * @param {event} event - mouse click down event
+ */
+function onMouseDown( event ) {
+  mouse.x = event.clientX;
+  mouse.y = event.clientY;
+  mouse.z = 1;
+  mouse.w = 1;
+}
+/**
+ * capture mouse unclick
+ * @param {event} event - mouse unclick event
+ */
+function onMouseUp( event ) {
+  mouse.z = 0;
+  mouse.w = 0;
 }
 main();
