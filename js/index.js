@@ -1,5 +1,5 @@
 import * as THREE from './lib/three.module.js';
-const currentShader = 'shaders/basic.frag'; // current fragment shader path
+const currentShader = 'shaders/raymarch.frag'; // current fragment shader path
 const mouse = new THREE.Vector4();
 
 /**
