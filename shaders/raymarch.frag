@@ -1,0 +1,91 @@
+//ray marching fragment shader
+
+uniform vec3      iResolution;           // viewport resolution (in pixels)
+uniform float     iTime;                 // shader playback time (in seconds)
+uniform float     iTimeDelta;            // render time (in seconds)
+uniform int       iFrame;                // shader playback frame
+uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
+
+
+const float INFINITY = 1e20;
+const int   NUMBER_OF_STEPS = 100;
+const float MIN_HIT_DIST    = 0.001;
+const float MAX_TRACE_DIST  = 40.0;
+const int ITERATIONS = 5; // how many times to fold
+const float SCALE = 1.0; // size of sdf shapes
+const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
+const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
+
+// returns distance to nearest object in the world
+float sdf(in vec3 pnt)
+{
+    vec4 p = vec4(pnt,1.0);
+    p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+    sierpinski_fold(p, ITERATIONS, OFFSET);
+    return min(INFINITY, sdTetrahedron(p,SCALE));
+}
+
+//calculate the normal of a 3d surface
+vec3 calc_norm(in vec3 point)
+{
+    const vec3 SMALL_STEP = vec3(0.001, 0.0, 0.0);
+
+    float gradient_x = sdf(point + SMALL_STEP.xyy) - sdf(point - SMALL_STEP.xyy);
+    float gradient_y = sdf(point + SMALL_STEP.yxy) - sdf(point - SMALL_STEP.yxy);
+    float gradient_z = sdf(point + SMALL_STEP.yyx) - sdf(point - SMALL_STEP.yyx);
+    return normalize(vec3(gradient_x, gradient_y, gradient_z));
+}
+
+vec3 lighting(in vec3 cur_pos)
+{
+    vec3 N = calc_norm(cur_pos);
+
+    //diffuse lighting
+    // vec3 light_pos = vec3(2.0, -5.0, 3.0);
+    // vec3 L = normalize(pos - light_pos); // vector pointing to light
+    // float diffuse = max(0.0, dot(N, L)); // lambertian
+    // return vec3(1.0,0.0,0.0) * diffuse; // return normalized rgb
+
+    //since normal will be -1 to 1, "normalize" returned color to 0 to 1
+    return N * 0.5 + 0.5; 
+}
+
+vec3 ray_march(in vec3 cam_pos, in vec3 ray)
+{
+    float dist_traveled = 0.0;
+
+    for (int i = 0; i < NUMBER_OF_STEPS; i++)
+    {
+        vec3 cur_pos = cam_pos + dist_traveled * ray;
+        float dist_to_closest = sdf(cur_pos);
+        if (dist_to_closest < MIN_HIT_DIST)
+        {            
+            return lighting(cur_pos);
+        }
+        if (dist_traveled > MAX_TRACE_DIST)
+        {
+            break;
+        }
+        dist_traveled += dist_to_closest;
+    }
+    return vec3(0.0); // hit nothing, return black.
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
+    vec2 uv = (fragCoord/iResolution.xy)*2.0 - 1.0;
+    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST, 0.0, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+2.0); //our "camera" position
+    // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
+    vec3 ray = normalize(vec3(uv, -1.0));
+
+    vec3 col = ray_march(cam_pos, ray);
+
+    // Output to screen
+    fragColor = vec4(col,1.0);
+}
+
+void main() 
+{
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}

@@ -1,5 +1,6 @@
 import * as THREE from './lib/three.module.js';
-const currentShader = 'shaders/basic.frag'; // current fragment shader path
+const shaderInclude = 'shaders/common.frag'; // prepend to shader
+const currentShader = 'shaders/raymarch.frag'; // current fragment shader path
 const mouse = new THREE.Vector4();
 
 /**
@@ -39,7 +40,14 @@ async function main() {
     iMouse: {value: new THREE.Vector4()},
     iResolution: {value: new THREE.Vector3()},
   };
-  const fragmentShader = await readFile(currentShader);
+  let fragmentIncl;
+  if (shaderInclude.length > 0) {
+    fragmentIncl = await readFile(shaderInclude);
+  } else {
+    fragmentIncl = '';
+  }
+  let fragmentShader = await readFile(currentShader);
+  fragmentShader = fragmentIncl + fragmentShader;
   const material = new THREE.ShaderMaterial({
     fragmentShader,
     uniforms,
