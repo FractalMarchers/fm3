@@ -5,8 +5,9 @@ uniform float     iTime;                 // shader playback time (in seconds)
 uniform float     iTimeDelta;            // render time (in seconds)
 uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
-uniform vec3      keyboard; 
-
+uniform vec3      keyboard;
+uniform float     morphing;
+uniform int       user; 
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -19,11 +20,43 @@ const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--
 
 // returns distance to nearest object in the world
 float sdf(in vec3 pnt)
-{
-    vec4 p = vec4(pnt,1.0);
-    //p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
-    sierpinski_fold(p, ITERATIONS, OFFSET);
-    return min(INFINITY, sdTetrahedron(p,SCALE));
+{   
+    //Prashant
+    if(user == 1){
+        vec3 p1 = rotate(pnt,vec3(1.),iTime/5.);
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(p1,vec3(0.3));
+        return mix(sphere,box,0.5);
+    }
+
+    //Michael
+    else if(user == 2){
+        vec4 p = vec4(pnt,1.0);
+        //p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        sierpinski_fold(p, ITERATIONS, OFFSET);
+        return min(INFINITY, sdTetrahedron(p,SCALE));
+    }
+
+    //Siddhant
+    if(user == 3){
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(pnt,vec3(0.3));
+        return smin(sphere,box,0.3);
+    }
+
+    //Mozhdeh
+    if(user == 4){
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(pnt,vec3(0.3));
+        return max(-sphere,box);
+    }
+
+    //Kaushik
+    if(user == 5){
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(pnt,vec3(0.3));
+        return max(sphere,-box);
+    }
 }
 
 //calculate the normal of a 3d surface
