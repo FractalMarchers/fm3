@@ -156,6 +156,7 @@ vec3 reflection(in vec3 cam_pos, in vec3 ray)
             {            
                 reflect_col = lighting(cur_pos, ray);
                 hit_flag = 1.0;
+                break;
             }
             if (dist_traveled > MAX_TRACE_DIST)
             {
