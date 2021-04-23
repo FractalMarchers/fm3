@@ -46,9 +46,10 @@ float sdf(in vec3 pnt)
 
     //Mozhdeh
     if(user == 4){
-        float sphere = sdSphere(pnt,0.4);
-        float box = sdBox(pnt,vec3(0.3));
-        return max(-sphere,box);
+        vec4 p = vec4(pnt,1.0);
+        p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        float closest = min(sdSphere(p.xyz,SCALE), sdPlane(p.xyz, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0)));
+        return min(INFINITY, closest);
     }
 
     //Kaushik
@@ -72,16 +73,40 @@ vec3 calc_norm(in vec3 point)
 
 vec3 lighting(in vec3 cur_pos)
 {
-    vec3 N = calc_norm(cur_pos);
+    float ambient = .2;
+    float diffuse_c = 0.6;
+    float specular_c = 0.4;
+    float specular_k = 20.;
+
+    vec4 p = vec4(cur_pos,1.0);
+    p = opRepeat(p, REPETITION_PERIOD);
+    //replacing cur_pos with p.xyz to have similar lighting for all objects
+    
+    vec3 N = calc_norm(p.xyz);
+    vec3 eyeDir = normalize(-ray);
 
     //diffuse lighting
-    // vec3 light_pos = vec3(2.0, -5.0, 3.0);
-    // vec3 L = normalize(pos - light_pos); // vector pointing to light
-    // float diffuse = max(0.0, dot(N, L)); // lambertian
-    // return vec3(1.0,0.0,0.0) * diffuse; // return normalized rgb
+    vec3 light_pos = vec3(-5.0, -10.0, -5.0);
+    vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
+    float diffuse = max(0.0, dot(N, L)); // lambertian
 
-    //since normal will be -1 to 1, "normalize" returned color to 0 to 1
-    return N * 0.5 + 0.5; 
+    //specular lighting
+    vec3 R = 2.0 * dot(N, L) * N - L;
+    float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
+
+    //compute final color for each obj
+    vec3 color = vec3(0.0);
+    if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
+    {
+        color = vec3(0.5,0.4,0.5) * ambient; 
+    }
+    else //sphere color
+    {
+        color = vec3(1.0,1.0,1.0) * ambient;
+        color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
+        color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+    }
+    return color;
 }
 
 vec3 ray_march(in vec3 cam_pos, in vec3 ray)
