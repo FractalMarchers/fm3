@@ -12,11 +12,11 @@ uniform int       user;
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
 const float MIN_HIT_DIST    = 0.001;
-const float MAX_TRACE_DIST  = 40.0;
+const float MAX_TRACE_DIST  = 80.0;
 const int ITERATIONS = 5; // how many times to fold
 const float SCALE = 1.0; // size of sdf shapes
 const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
-const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
+const vec4 REPETITION_PERIOD = vec4(6.0); // how often to repeat--higher numbers repeat less often
 
 // returns distance to nearest object in the world
 float sdf(in vec3 pnt)
@@ -32,7 +32,7 @@ float sdf(in vec3 pnt)
     //Michael
     else if(user == 2){
         vec4 p = vec4(pnt,1.0);
-        //p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
         sierpinski_fold(p, ITERATIONS, OFFSET);
         return min(INFINITY, sdTetrahedron(p,SCALE));
     }
@@ -105,13 +105,34 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
     return vec3(0.0); // hit nothing, return black.
 }
 
+mat3 setCamera( in vec3 ro, in vec3 ta, float cr )
+{
+	vec3 cw = normalize(ta-ro);
+	vec3 cp = vec3(sin(cr), cos(cr),0.0);
+	vec3 cu = normalize( cross(cw,cp) );
+	vec3 cv =          ( cross(cu,cw) );
+    return mat3( cu, cv, cw );
+}
+
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
     vec2 uv = (fragCoord/iResolution.xy)*2.0 - 1.0;
-    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST+keyboard.x, 0.0+keyboard.y, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+1.0+keyboard.z); //our "camera" position
+    vec2 mo = (iMouse.xy/iResolution.xy)*10.0;
+    vec3 cam_pos = vec3(keyboard.x, keyboard.y, keyboard.z); //our "camera" position
+
+    // camera	
+    vec3 ro = cam_pos + vec3(cos(mo.x), mo.y, sin(mo.x));
+    // camera-to-world transformation
+    mat3 ca = setCamera( ro, cam_pos, 0.5*iTime);
+    // focal length
+    const float fl = 2.5;
+    // ray direction
+    vec3 ray = ca * normalize( vec3(uv,fl) );
+    // cam_pos = rotate(cam_pos, vec3(1.0, 0.0, 1.0), mouse.x);
+    // cam_pos = rotate(cam_pos, vec3(0.0, 1.0, 0.0), mouse.y);
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
-    vec3 ray = normalize(vec3(uv, -1.0));
+    // vec3 ray = normalize(vec3(uv, 1.0));
 
     vec3 col = ray_march(cam_pos, ray);
 
