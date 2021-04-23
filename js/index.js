@@ -36,6 +36,7 @@ async function main() {
   const uniforms = {
     iTime: {value: 0.0},
     iTimeDelta: {value: 0.0},
+    keyboard: {value: new THREE.Vector2(0,0)},
     iFrame: {value: 0},
     iMouse: {value: new THREE.Vector4()},
     iResolution: {value: new THREE.Vector3()},
@@ -53,6 +54,38 @@ async function main() {
     uniforms,
   });
   scene.add(new THREE.Mesh(plane, material));
+
+  let keyboard = new THREE.Vector3();
+  keyboard.x = 0.;
+  keyboard.y = 0.;
+  keyboard.z = 2.;
+  document.addEventListener("keydown", (e)=>{
+    var keyCode = e.code;
+    
+    switch(keyCode){
+      case 'KeyW':
+        keyboard.z += -0.06;
+        break;
+      case 'KeyA':
+        keyboard.x += -0.06;
+        break;
+      case 'KeyS':
+        keyboard.z += 0.06;
+        break;
+      case 'KeyD':
+        keyboard.x += 0.06;
+        break;
+      case 'ArrowUp':
+        keyboard.y += 0.06;
+        break;
+      case 'ArrowDown':
+        keyboard.y += -0.06;
+        break;
+      default:
+        break;
+    }
+  });
+
   /**
    * Update canvas pixel size to match view window size
    * @param {THREE.renderer} renderer - the renderer handle
@@ -81,7 +114,10 @@ async function main() {
     uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
     uniforms.iTime.value = time;
     uniforms.iTimeDelta.value = clock.getDelta();
+    if(mouse)
     uniforms.iMouse.value = mouse;
+    if(keyboard)
+      uniforms.keyboard.value =  keyboard;
     uniforms.iFrame.value = currentFrame;
 
     renderer.render(scene, camera);

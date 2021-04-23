@@ -5,6 +5,7 @@ uniform float     iTime;                 // shader playback time (in seconds)
 uniform float     iTimeDelta;            // render time (in seconds)
 uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
+uniform vec3      keyboard; 
 
 
 const float INFINITY = 1e20;
@@ -20,7 +21,7 @@ const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--
 float sdf(in vec3 pnt)
 {
     vec4 p = vec4(pnt,1.0);
-    p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+    //p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
     sierpinski_fold(p, ITERATIONS, OFFSET);
     return min(INFINITY, sdTetrahedron(p,SCALE));
 }
@@ -75,7 +76,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
     vec2 uv = (fragCoord/iResolution.xy)*2.0 - 1.0;
-    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST, 0.0, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+2.0); //our "camera" position
+    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST+keyboard.x, 0.0+keyboard.y, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+1.0+keyboard.z); //our "camera" position
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
     vec3 ray = normalize(vec3(uv, -1.0));
 
