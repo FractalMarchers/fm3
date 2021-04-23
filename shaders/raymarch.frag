@@ -129,8 +129,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     const float fl = 2.5;
     // ray direction
     vec3 ray = ca * normalize( vec3(uv,fl) );
-    // cam_pos = rotate(cam_pos, vec3(1.0, 0.0, 1.0), mouse.x);
-    // cam_pos = rotate(cam_pos, vec3(0.0, 1.0, 0.0), mouse.y);
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
     // vec3 ray = normalize(vec3(uv, 1.0));
 

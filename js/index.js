@@ -203,8 +203,8 @@ async function main() {
  */
 function onMouseMove( event ) {
   if (mouse.z === 1) {
-    mouse.x = event.clientX;
-    mouse.y = event.clientY;
+    mouse.x += event.movementX;
+    mouse.y += event.movementY;
   }
 }
 /**
@@ -212,8 +212,6 @@ function onMouseMove( event ) {
  * @param {event} event - mouse click down event
  */
 function onMouseDown( event ) {
-  mouse.x = event.clientX;
-  mouse.y = event.clientY;
   mouse.z = 1;
   mouse.w = 1;
 }
