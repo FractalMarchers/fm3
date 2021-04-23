@@ -109,9 +109,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
     vec2 uv = (fragCoord/iResolution.xy)*2.0 - 1.0;
-    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST+keyboard.x, 0.0+keyboard.y, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+1.0+keyboard.z); //our "camera" position
+    vec2 mouse = (iMouse.xy/iResolution.xy)*10.0;
+    vec3 cam_pos = vec3(keyboard.x, keyboard.y, keyboard.z); //our "camera" position
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
     vec3 ray = normalize(vec3(uv, -1.0));
+    ray = rotate(ray, vec3(0.0,1.0, 0.0), mouse.x);
+    ray = rotate(ray, vec3(1.0,0.0, 0.0), mouse.y);
 
     vec3 col = ray_march(cam_pos, ray);
 
