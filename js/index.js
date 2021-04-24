@@ -70,7 +70,6 @@ async function main() {
   keyboard.z = 2.;
   document.addEventListener('keydown', (e)=>{
     const keyCode = e.code;
-    console.log(keyCode);
     switch (keyCode) {
       case 'KeyW':
         keyboard.z += -0.06;
@@ -192,9 +191,9 @@ async function main() {
     stats.end();
     requestAnimationFrame(render);
   }
-  window.addEventListener('mousemove', onMouseMove, false);
-  window.addEventListener('mousedown', onMouseDown, false);
-  window.addEventListener('mouseup', onMouseUp, false);
+  document.getElementById("c").addEventListener('mousemove', onMouseMove, false);
+  document.getElementById("c").addEventListener('mousedown', onMouseDown, false);
+  document.getElementById("c").addEventListener('mouseup', onMouseUp, false);
   requestAnimationFrame(render);
 }
 /**
