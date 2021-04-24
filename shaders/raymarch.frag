@@ -26,7 +26,7 @@ float sdf(in vec3 pnt)
         vec3 p1 = rotate(pnt,vec3(1.),iTime/5.);
         float sphere = sdSphere(pnt,0.4);
         float box = sdBox(p1,vec3(0.3));
-        return mix(sphere,box,0.5);
+        return mix(sphere,box,morphing);
     }
 
     //Michael
