@@ -1,7 +1,7 @@
 //ray marching fragment shader
 
 uniform vec3      iResolution;           // viewport resolution (in pixels)
-uniform float     iTime;                 // shader playback time (in seconds)
+//uniform float     iTime;                 // shader playback time (in seconds)
 uniform float     iTimeDelta;            // render time (in seconds)
 uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
@@ -23,10 +23,10 @@ float sdf(in vec3 pnt)
 {   
     //Prashant
     if(user == 1){
-        vec3 p1 = rotate(pnt,vec3(1.),iTime/5.);
-        float sphere = sdSphere(pnt,0.4);
-        float box = sdBox(p1,vec3(0.3));
-        return mix(sphere,box,morphing);
+        float mengerBox = sdMengerBox(pnt);
+        vec3 pnt = tri_curve(pnt);
+        float mengerBoxFold = sdMengerBox(pnt*0.004);
+        return mix(mengerBox,mengerBoxFold,morphing);
     }
 
     //Michael

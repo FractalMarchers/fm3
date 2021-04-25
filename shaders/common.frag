@@ -1,6 +1,6 @@
 //ray marching common functions
 #include <common>
-
+uniform float     iTime; 
 
 vec4 opRepeat(in vec4 p, in vec4 rep_period)
 {
@@ -16,6 +16,11 @@ float sdBox(vec3 p, vec3 dimensions)
 {
   vec3 q = abs(p) - dimensions;
   return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+float sdBox2D(vec2 p, vec2 dimensions)
+{
+  vec2 q = abs(p) - dimensions;
+  return length(max(q,0.0)) + min(max(q.x,q.y),0.0);
 }
 
 //taken from: https://github.com/HackerPoet/PySpace
@@ -74,4 +79,47 @@ float smin( float a, float b, float k ){
 }
 
 
+vec2 fold(vec2 p, float ang){
+    vec2 n=vec2(cos(-ang),sin(-ang));
+    p-=2.*min(0.,dot(p,n))*n;
+    return p;
+}
+vec3 tri_fold(vec3 pt) {
+    pt.xy = fold(pt.xy,PI/3.-cos(iTime)/60.);
+    pt.xy = fold(pt.xy,-PI/3.);
+    pt.yz = fold(pt.yz,-PI/3.+sin(iTime)/40.);
+    pt.yz = fold(pt.yz,PI/3.);
+    // pt.xz = fold(pt.yz,-PI/2.+sin(iTime)/10.);
+    // pt.xz = fold(pt.yz,PI/2.);
+    return pt;
+}
+vec3 tri_curve(vec3 pt) {
+    for(int i=0;i<7;i++){
+        pt*=2.;
+        pt.x-=2.5+sin(iTime)/30.;
+        pt.y-=2.5+sin(iTime)/15.;
+        pt=tri_fold(pt);
+    }
+    return pt;
+}
+
+float sdMengerBox(vec3 pnt){
+    float d = sdBox(pnt,vec3(1.0));
+
+        float s = 1.0;
+        for( int m=0; m<3; m++ )
+        {
+            vec3 a = mod( pnt*s, 2.0 )-1.0;
+            s *= 3.0;
+            vec3 r = abs(1.0 - 3.0*abs(a));
+
+            float da = max(r.x,r.y);
+            float db = max(r.y,r.z);
+            float dc = max(r.z,r.x);
+            float c = (min(da,min(db,dc))-1.0)/s;
+
+            d = max(d,c);
+        }
+        return d;
+}
 //Prashant helper functions END
