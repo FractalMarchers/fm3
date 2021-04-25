@@ -119,11 +119,11 @@ async function main() {
   };
   gui.add(settings, 'morphing', 0, 1, 0.01);
   const userGui = gui.add(users, 'user', ['Michael', 'Mozhdeh',
-    'Kaushik', 'Siddhant', 'Prashant']).setValue('Prashant');
+    'Kaushik', 'Siddhant', 'Prashant Collision', 'Prashant']).setValue('Prashant Collision');
   userGui.onChange(function(value) {
     switch (value) {
       case 'Prashant':
-        currentUser = 1.0;
+        currentUser = 6.0;
         break;
       case 'Michael':
         currentUser = 2.0;
@@ -136,6 +136,9 @@ async function main() {
         break;
       case 'Siddhant':
         currentUser = 5.0;
+        break;
+      case 'Prashant Collision':
+        currentUser = 1.0;
         break;
       default:
         currentUser = 1.0;
