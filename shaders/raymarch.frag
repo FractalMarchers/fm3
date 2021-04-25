@@ -17,16 +17,39 @@ const int ITERATIONS = 5; // how many times to fold
 const float SCALE = 1.0; // size of sdf shapes
 const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
 const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
-
+float box_position_x = 0.;
+float sphere_position_x = 0.;
+bool dir = true;
 // returns distance to nearest object in the world
 float sdf(in vec3 pnt)
 {   
     //Prashant
-    if(user == 1){
+    if(user == 6){
         float mengerBox = sdMengerBox(pnt);
         vec3 pnt = tri_curve(pnt);
         float mengerBoxFold = sdMengerBox(pnt*0.004);
         return mix(mengerBox,mengerBoxFold,morphing);
+    }
+    if(user == 1){
+        if(dir)
+            sphere_position_x = pnt.x + 1.5 - iTime/5.;
+        else
+            sphere_position_x = pnt.x - 0.1 + iTime/5.;
+            
+        float sphere = sdSphere(
+            vec3(sphere_position_x,pnt.y,pnt.z),
+            0.4
+        );
+        box_position_x = pnt.x;
+        float box = sdBox(
+            vec3(box_position_x,pnt.y,pnt.z),
+            vec3(0.3)
+        );
+
+        if(dir)
+            dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
+
+        return min(sphere,box);
     }
 
     //Michael

@@ -122,4 +122,27 @@ float sdMengerBox(vec3 pnt){
         }
         return d;
 }
+float DE(in vec3 pnt, float box_position_x){
+    return pnt.x - box_position_x;
+}
+bool ray_march_sphere(vec3 cam_pos, float box_position_x)
+{
+    float dist_traveled = 0.0;
+    vec3 ray = (vec3(1.0,0.0, 0.0));
+    for (int i = 0; i < 100; i++)
+    {
+        vec3 cur_pos = cam_pos + dist_traveled * ray;
+        float dist_to_closest = DE(cur_pos,box_position_x);
+        if (dist_to_closest < 0.001)
+        {   
+            return false;
+        }
+        if (dist_traveled > 50.)
+        {
+            break;
+        }
+        dist_traveled += dist_to_closest;
+    }
+    return true;
+}
 //Prashant helper functions END
