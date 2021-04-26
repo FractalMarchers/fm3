@@ -19,7 +19,9 @@ const int ITERATIONS = 5; // how many times to fold
 const float SCALE = 1.0; // size of sdf shapes
 const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
 const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
+float  box_dimension = 0.3;
 float box_position_x = 0.;
+float sphere_radius = 0.4;
 float sphere_position_x = 0.;
 bool dir = true;
 // returns distance to nearest object in the world
@@ -40,16 +42,16 @@ float sdf(in vec3 pnt)
             
         float sphere = sdSphere(
             vec3(sphere_position_x,pnt.y,pnt.z),
-            0.4
+            sphere_radius
         );
         box_position_x = pnt.x;
         float box = sdBox(
             vec3(box_position_x,pnt.y,pnt.z),
-            vec3(0.3)
+            vec3(box_dimension)
         );
 
         if(dir)
-            dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
+            dir = ray_march_sphere(vec3(sphere_position_x-sphere_radius,pnt.y,pnt.z),box_position_x+box_dimension);
 
         return min(sphere,box);
     }
