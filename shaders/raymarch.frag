@@ -7,7 +7,8 @@ uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
 uniform vec3      keyboard;
 uniform float     morphing;
-uniform int       user; 
+uniform int       user;
+uniform vec3      lightDir; 
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -107,7 +108,7 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
     vec3 eyeDir = normalize(-ray);
 
     //diffuse lighting
-    vec3 light_pos = vec3(-5.0, -10.0, -5.0);
+    vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
     vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
     float diffuse = max(0.0, dot(N, L)); // lambertian
 

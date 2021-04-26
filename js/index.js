@@ -50,6 +50,7 @@ async function main() {
     iResolution: {value: new THREE.Vector3()},
     user: {value: 1},
     morphing: {value: 0.0},
+    lightDir: {value: new THREE.Vector3(-5,-10,-5)}
   };
   let fragmentIncl;
   if (shaderInclude.length > 0) {
@@ -120,6 +121,7 @@ async function main() {
   gui.add(settings, 'morphing', 0, 1, 0.01);
   const userGui = gui.add(users, 'user', ['Michael', 'Mozhdeh',
     'Kaushik', 'Siddhant', 'Prashant Collision', 'Prashant']).setValue('Prashant Collision');
+
   userGui.onChange(function(value) {
     switch (value) {
       case 'Prashant':
@@ -145,6 +147,17 @@ async function main() {
         break;
     }
   });
+
+
+  const dirLight = {
+    x: 0.5,
+    y: 0,
+    z: 0.9
+  };
+  var LightFolder = gui.addFolder('Light');
+  LightFolder.add(dirLight, 'x', -10, 10, 0.01);
+  LightFolder.add(dirLight, 'y', -10, 10, 0.01);
+  LightFolder.add(dirLight, 'z', -10, 10, 0.01);
 
   /**
    * Update canvas pixel size to match view window size
@@ -187,6 +200,9 @@ async function main() {
     if (settings.morphing) {
       uniforms.morphing.value = settings.morphing;
     }
+    
+    uniforms.lightDir.value = dirLight;
+    
     uniforms.iFrame.value = currentFrame;
 
     renderer.render(scene, camera);
