@@ -9,6 +9,7 @@ uniform vec3      keyboard;
 uniform float     morphing;
 uniform int       user;
 uniform vec3      lightDir; 
+uniform bool      lightingBoolean;
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -96,39 +97,46 @@ vec3 calc_norm(in vec3 point)
 
 vec3 lighting(in vec3 cur_pos,vec3 ray)
 {
-    float ambient = .1;
-    float diffuse_c = 0.6;
-    float specular_c = 0.8;
-    float specular_k = 20.;
+    if(lightingBoolean){
+        float ambient = .1;
+        float diffuse_c = 0.6;
+        float specular_c = 0.8;
+        float specular_k = 20.;
 
-    vec4 p = vec4(cur_pos,1.0);
-    //p = opRepeat(p, REPETITION_PERIOD);
-    //replacing cur_pos with p.xyz to have similar lighting for all objects
-    vec3 N = calc_norm(p.xyz);
-    vec3 eyeDir = normalize(-ray);
+        vec4 p = vec4(cur_pos,1.0);
+        //p = opRepeat(p, REPETITION_PERIOD);
+        //replacing cur_pos with p.xyz to have similar lighting for all objects
+        vec3 N = calc_norm(p.xyz);
+        vec3 eyeDir = normalize(-ray);
 
-    //diffuse lighting
-    vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
-    vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
-    float diffuse = max(0.0, dot(N, L)); // lambertian
+        //diffuse lighting
+        vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
+        vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
+        float diffuse = max(0.0, dot(N, L)); // lambertian
 
-    //specular lighting
-    vec3 R = 2.0 * dot(N, L) * N - L;
-    float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
+        //specular lighting
+        vec3 R = 2.0 * dot(N, L) * N - L;
+        float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
 
-    //compute final color for each obj
-    vec3 color = vec3(0.0);
-    if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
-    {
-        color = vec3(0.5,0.4,0.5) * ambient; 
+        //compute final color for each obj
+        vec3 color = vec3(0.0);
+        if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
+        {
+            color = vec3(0.5,0.4,0.5) * ambient; 
+        }
+        else //sphere color
+        {
+            color = vec3(1.0,1.0,1.0) * ambient;
+            color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
+            color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+        }
+        return color;
     }
-    else //sphere color
-    {
-        color = vec3(1.0,1.0,1.0) * ambient;
-        color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
-        color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+    else{
+        vec3 N = calc_norm(cur_pos);
+        return N * 0.5 + 0.5; 
     }
-    return color;
+    
 }
 
 vec3 ray_march(in vec3 cam_pos, in vec3 ray)

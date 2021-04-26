@@ -50,7 +50,8 @@ async function main() {
     iResolution: {value: new THREE.Vector3()},
     user: {value: 1},
     morphing: {value: 0.0},
-    lightDir: {value: new THREE.Vector3(-5,-10,-5)}
+    lightDir: {value: new THREE.Vector3(-5,-10,-5)},
+    lightingBoolean: {value: true}
   };
   let fragmentIncl;
   if (shaderInclude.length > 0) {
@@ -155,10 +156,18 @@ async function main() {
     z: 0.9
   };
   var LightFolder = gui.addFolder('Light');
+  LightFolder.open();
   LightFolder.add(dirLight, 'x', -10, 10, 0.01);
   LightFolder.add(dirLight, 'y', -10, 10, 0.01);
   LightFolder.add(dirLight, 'z', -10, 10, 0.01);
-
+  
+  const lightSettings = {
+    lighting: true
+  }
+  let color = true;
+  LightFolder.add(lightSettings, 'lighting').onChange(function (value) {
+    lightSettings.lighting = value;
+  });
   /**
    * Update canvas pixel size to match view window size
    * @param {THREE.renderer} renderer - the renderer handle
@@ -200,7 +209,7 @@ async function main() {
     if (settings.morphing) {
       uniforms.morphing.value = settings.morphing;
     }
-    
+    uniforms.lightingBoolean.value = lightSettings.lighting;
     uniforms.lightDir.value = dirLight;
     
     uniforms.iFrame.value = currentFrame;
