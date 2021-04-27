@@ -1,7 +1,15 @@
 import * as THREE from './lib/three.module.js';
+import Stats from './lib/Stats.js';
+import * as dat from './lib/dat.gui.module.js';
 const shaderInclude = 'shaders/common.frag'; // prepend to shader
 const currentShader = 'shaders/raymarch.frag'; // current fragment shader path
 const mouse = new THREE.Vector4();
+
+const stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
+
 
 /**
  * read a file from the server.
@@ -36,9 +44,14 @@ async function main() {
   const uniforms = {
     iTime: {value: 0.0},
     iTimeDelta: {value: 0.0},
+    keyboard: {value: new THREE.Vector2(0, 0)},
     iFrame: {value: 0},
     iMouse: {value: new THREE.Vector4()},
     iResolution: {value: new THREE.Vector3()},
+    user: {value: 1},
+    morphing: {value: 0.0},
+    lightDir: {value: new THREE.Vector3(-5,-10,-5)},
+    lightingBoolean: {value: true}
   };
   let fragmentIncl;
   if (shaderInclude.length > 0) {
@@ -53,6 +66,108 @@ async function main() {
     uniforms,
   });
   scene.add(new THREE.Mesh(plane, material));
+  let currentUser = 1.0;
+  const keyboard = new THREE.Vector3();
+  keyboard.x = 0.;
+  keyboard.y = 0.;
+  keyboard.z = 2.;
+  document.addEventListener('keydown', (e)=>{
+    const keyCode = e.code;
+    switch (keyCode) {
+      case 'KeyW':
+        keyboard.z += -0.06;
+        break;
+      case 'KeyA':
+        keyboard.x += -0.06;
+        break;
+      case 'KeyS':
+        keyboard.z += 0.06;
+        break;
+      case 'KeyD':
+        keyboard.x += 0.06;
+        break;
+      case 'ArrowUp':
+        keyboard.y += 0.06;
+        break;
+      case 'ArrowDown':
+        keyboard.y += -0.06;
+        break;
+      case 'Digit1':
+        currentUser = 1;
+        break;
+      case 'Digit2':
+        currentUser = 2;
+        break;
+      case 'Digit3':
+        currentUser = 3;
+        break;
+      case 'Digit4':
+        currentUser = 4;
+        break;
+      case 'Digit5':
+        currentUser = 5;
+        break;
+      default:
+        break;
+    }
+  });
+
+  const gui = new dat.GUI();
+  const settings = {
+    morphing: 0,
+  };
+  const users = {
+    user: '',
+  };
+  gui.add(settings, 'morphing', 0, 1, 0.01);
+  const userGui = gui.add(users, 'user', ['Michael', 'Mozhdeh',
+    'Kaushik', 'Siddhant', 'Prashant Collision', 'Prashant']).setValue('Prashant Collision');
+
+  userGui.onChange(function(value) {
+    switch (value) {
+      case 'Prashant':
+        currentUser = 6.0;
+        break;
+      case 'Michael':
+        currentUser = 2.0;
+        break;
+      case 'Mozhdeh':
+        currentUser = 3.0;
+        break;
+      case 'Kaushik':
+        currentUser = 4.0;
+        break;
+      case 'Siddhant':
+        currentUser = 5.0;
+        break;
+      case 'Prashant Collision':
+        currentUser = 1.0;
+        break;
+      default:
+        currentUser = 1.0;
+        break;
+    }
+  });
+
+
+  const dirLight = {
+    x: 0.5,
+    y: 0,
+    z: 0.9
+  };
+  var LightFolder = gui.addFolder('Light');
+  LightFolder.open();
+  LightFolder.add(dirLight, 'x', -10, 10, 0.01);
+  LightFolder.add(dirLight, 'y', -10, 10, 0.01);
+  LightFolder.add(dirLight, 'z', -10, 10, 0.01);
+  
+  const lightSettings = {
+    lighting: true
+  }
+  let color = true;
+  LightFolder.add(lightSettings, 'lighting').onChange(function (value) {
+    lightSettings.lighting = value;
+  });
   /**
    * Update canvas pixel size to match view window size
    * @param {THREE.renderer} renderer - the renderer handle
@@ -73,6 +188,7 @@ async function main() {
    * @param {Number} time - Render time
    */
   function render(time) {
+    stats.begin();
     time *= 0.001; // convert to seconds
 
     resizeRendererToDisplaySize(renderer);
@@ -81,16 +197,32 @@ async function main() {
     uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
     uniforms.iTime.value = time;
     uniforms.iTimeDelta.value = clock.getDelta();
-    uniforms.iMouse.value = mouse;
+    if (mouse) {
+      uniforms.iMouse.value = mouse;
+    }
+    if (keyboard) {
+      uniforms.keyboard.value = keyboard;
+    }
+    if (currentUser) {
+      uniforms.user.value = currentUser;
+    }
+    if (settings.morphing) {
+      uniforms.morphing.value = settings.morphing;
+    }
+    uniforms.lightingBoolean.value = lightSettings.lighting;
+    uniforms.lightDir.value = dirLight;
+    
     uniforms.iFrame.value = currentFrame;
 
     renderer.render(scene, camera);
     currentFrame += 1;
+
+    stats.end();
     requestAnimationFrame(render);
   }
-  window.addEventListener('mousemove', onMouseMove, false);
-  window.addEventListener('mousedown', onMouseDown, false);
-  window.addEventListener('mouseup', onMouseUp, false);
+  document.getElementById("c").addEventListener('mousemove', onMouseMove, false);
+  document.getElementById("c").addEventListener('mousedown', onMouseDown, false);
+  document.getElementById("c").addEventListener('mouseup', onMouseUp, false);
   requestAnimationFrame(render);
 }
 /**
@@ -99,8 +231,8 @@ async function main() {
  */
 function onMouseMove( event ) {
   if (mouse.z === 1) {
-    mouse.x = event.clientX;
-    mouse.y = event.clientY;
+    mouse.x += event.movementX;
+    mouse.y += event.movementY;
   }
 }
 /**
@@ -108,8 +240,6 @@ function onMouseMove( event ) {
  * @param {event} event - mouse click down event
  */
 function onMouseDown( event ) {
-  mouse.x = event.clientX;
-  mouse.y = event.clientY;
   mouse.z = 1;
   mouse.w = 1;
 }
