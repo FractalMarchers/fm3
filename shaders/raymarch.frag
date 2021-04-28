@@ -18,7 +18,7 @@ const float MAX_TRACE_DIST  = 40.0;
 const int ITERATIONS = 5; // how many times to fold
 const float SCALE = 1.0; // size of sdf shapes
 const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
-const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
+const vec4 REPETITION_PERIOD = vec4(5.0); // how often to repeat--higher numbers repeat less often
 float box_position_x = 0.;
 float sphere_position_x = 0.;
 bool dir = true;
@@ -56,8 +56,9 @@ float sdf(in vec3 pnt)
 
     //Michael
     else if(user == 2){
-        vec4 p = vec4(pnt,1.0);
-        //p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        float time = 32.0 + iTime*1.5;
+        vec4 p = vec4(rotate(pnt,vec3(1.0,0.0,1.0), 8.32*cos(time*0.1)),1.0);
+        p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
         sierpinski_fold(p, ITERATIONS, OFFSET);
         return min(INFINITY, sdTetrahedron(p,SCALE));
     }
