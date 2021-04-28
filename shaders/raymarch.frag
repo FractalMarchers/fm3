@@ -71,9 +71,10 @@ float sdf(in vec3 pnt)
 
     //Mozhdeh
     if(user == 4){
-        float sphere = sdSphere(pnt,0.4);
-        float box = sdBox(pnt,vec3(0.3));
-        return max(-sphere,box);
+        vec4 p = vec4(pnt,1.0);
+        p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        float closest = min(sdSphere(p.xyz,SCALE), sdPlane(p.xyz, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0)));
+        return min(INFINITY, closest);
     }
 
     //Kaushik
