@@ -12,6 +12,13 @@ float sdSphere(in vec3 p, float sphere_radius)
     return length(p) - sphere_radius;
 }
 
+
+float sdPlane(in vec3 p, in vec3 plane_point, in vec3 plane_N)
+{
+    float d = dot(p - plane_point, plane_N);
+    return d;
+}
+
 float sdBox(vec3 p, vec3 dimensions)
 {
   vec3 q = abs(p) - dimensions;
