@@ -162,7 +162,7 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 
 vec3 reflection(in vec3 cam_pos, in vec3 ray)
 {
-    float reflection_c = 0.25; //eflection coefficient is initially 1
+    float reflection_c = 0.25; //reflection coefficient
     int reflection_depth = 3; // the number of reflections, 1 means no reflection
 
     vec3 col = vec3(0.0);
@@ -202,6 +202,7 @@ vec3 reflection(in vec3 cam_pos, in vec3 ray)
         }
         
         col += reflect_col * pow(reflection_c, float (depth));
+        
         //compute new reflection pos and ray 
         vec3 N = calc_norm(cur_pos);
         cam_pos = cur_pos + N * MIN_HIT_DIST;
