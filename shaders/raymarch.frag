@@ -250,7 +250,7 @@ float sdf(in vec3 pnt)
             dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
 
         //return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
-        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.025;
+        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.075;
     }
 
     //Michael
@@ -312,13 +312,18 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
         vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
         float diffuse = max(0.0, dot(N, L)); // lambertian
-        if(diffuse != 0.0) { // this check is required to prevent flashing
-            diffuse = pattern1(timeBasedShift(vec2(diffuse))); // with noise
-        }
+        
 
         //specular lighting
         vec3 R = 2.0 * dot(N, L) * N - L;
         float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
+
+        if(diffuse != 0.0) { // this check is required to prevent flashing
+            vec3 lightNoise = vec3(pattern2(timeBasedShift(vec3(ambient,diffuse,specular)))); // with noise
+            ambient += lightNoise.r;
+            diffuse += lightNoise.g;
+            specular += lightNoise.b;
+        }
 
         //compute final color for each obj
         vec3 color = vec3(0.0);
@@ -328,9 +333,9 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         }
         else //sphere color
         {
-            color = vec3(1.0,1.0,1.0) * ambient;
-            color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
-            color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+            color = vec3(1.0,0.0,0.0) * ambient;
+            color += vec3(0.0,1.0,0.0) * diffuse * diffuse_c;
+            color += vec3(0.0,0.0,1.0) * specular * specular_c ;
         }
         return color;
     }
@@ -387,8 +392,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         fragColor = vec4(col,1.0);
 
         // Adding noise to screen to create fog
-        st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
-        fragColor += vec4(vec3(pattern(st)*color),1.0);
+        //st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
+        //fragColor += vec4(vec3(pattern(st)*color),1.0);
     }
     
     
