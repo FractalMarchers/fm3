@@ -28,12 +28,6 @@ bool dir = true;
 float sdf(in vec3 pnt)
 {   
     //Prashant
-    if(user == 6){
-        float mengerBox = sdMengerBox(pnt);
-        vec3 pnt = tri_curve(pnt);
-        float mengerBoxFold = sdMengerBox(pnt*0.004);
-        return mix(mengerBox,mengerBoxFold,morphing);
-    }
     if(user == 1){
         if(dir)
             sphere_position_x = pnt.x + 1.5 - iTime/5.;
@@ -54,6 +48,22 @@ float sdf(in vec3 pnt)
             dir = ray_march_sphere(vec3(sphere_position_x-sphere_radius,pnt.y,pnt.z),box_position_x+box_dimension);
 
         return min(sphere,box);
+    }
+    else if(user == 6){
+        float mengerBox = sdMengerBox(pnt);
+        vec3 pnt = tri_curve(pnt);
+        float mengerBoxFold = sdMengerBox(pnt*0.004);
+        return mix(mengerBox,mengerBoxFold,morphing);
+    }
+    else if(user == 7){
+        vec3 p1 = rotate(pnt,vec3(1.),iTime/5.);
+        float box = opTwist(p1);
+        float torus = sdTorus(p1,vec2(0.6,0.1));
+        float res = smin(box,torus,0.6);
+        pnt.x += sin(iTime/2.);
+        float sphere2 = sdSphere(pnt,0.46);
+        res = smin(res,sphere2,0.6);
+        return res;
     }
 
     //Michael

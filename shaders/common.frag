@@ -78,7 +78,24 @@ float smin( float a, float b, float k ){
     return mix( b, a, h ) - k*h*(1.0-h);
 }
 
-
+float opTwist( vec3 p )
+{
+    const float k = 10.0; // or some other amount
+    float c = cos(k*p.y);
+    float s = sin(k*p.y);
+    mat2  m = mat2(c,-s,s,c);
+    vec3  q = vec3(m*p.xz,p.y);
+    return sdBox(q,vec3(0.145));
+}
+float sdCylinder( vec3 p, vec3 c )
+{
+  return length(p.yz-c.xy)-c.z;
+}
+float sdTorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}
 vec2 fold(vec2 p, float ang){
     vec2 n=vec2(cos(-ang),sin(-ang));
     p-=2.*min(0.,dot(p,n))*n;
