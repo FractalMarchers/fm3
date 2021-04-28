@@ -2,9 +2,22 @@
 #include <common>
 uniform float     iTime; 
 
+// Many of these are derived from iquilezles' work.
+// Check it out: https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 vec4 opRepeat(in vec4 p, in vec4 rep_period)
 {
     return mod(p+0.5*rep_period,rep_period)-0.5*rep_period;
+}
+
+vec3 opRepeat(in vec3 p, in vec3 rep_period)
+{
+    return mod(p+0.5*rep_period,rep_period)-0.5*rep_period;
+}
+
+
+vec3 opFiniteRepeat(in vec3 p, in float repeats, in vec3 count)
+{
+    return p-repeats*clamp(round(p/repeats),-count,count);
 }
 
 float sdSphere(in vec3 p, float sphere_radius)
@@ -21,6 +34,19 @@ float sdBox2D(vec2 p, vec2 dimensions)
 {
   vec2 q = abs(p) - dimensions;
   return length(max(q,0.0)) + min(max(q.x,q.y),0.0);
+}
+
+float sdTorus(vec3 p, vec2 t)
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}
+
+float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
+{
+  p.x = abs(p.x);
+  float k = (sc.y*p.x>sc.x*p.y) ? dot(p.xy,sc) : length(p.xy);
+  return sqrt( dot(p,p) + ra*ra - 2.0*ra*k ) - rb;
 }
 
 //taken from: https://github.com/HackerPoet/PySpace
@@ -69,8 +95,8 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 }
 
 vec3 rotate(vec3 v, vec3 axis, float angle) {
-	mat4 m = rotationMatrix(axis, angle);
-	return (m * vec4(v, 1.0)).xyz;
+    mat4 m = rotationMatrix(axis, angle);
+    return (m * vec4(v, 1.0)).xyz;
 }
 
 float smin( float a, float b, float k ){

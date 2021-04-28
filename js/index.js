@@ -10,7 +10,6 @@ stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild( stats.dom );
 
 
-
 /**
  * read a file from the server.
  * @param {*} path - path to the file
@@ -50,8 +49,8 @@ async function main() {
     iResolution: {value: new THREE.Vector3()},
     user: {value: 1},
     morphing: {value: 0.0},
-    lightDir: {value: new THREE.Vector3(-5,-10,-5)},
-    lightingBoolean: {value: true}
+    lightDir: {value: new THREE.Vector3(-5, -10, -5)},
+    lightingBoolean: {value: true},
   };
   let fragmentIncl;
   if (shaderInclude.length > 0) {
@@ -66,7 +65,7 @@ async function main() {
     uniforms,
   });
   scene.add(new THREE.Mesh(plane, material));
-  let currentUser = 1.0;
+  let currentUser = 2.0;
   const keyboard = new THREE.Vector3();
   keyboard.x = 0.;
   keyboard.y = 0.;
@@ -120,8 +119,8 @@ async function main() {
     user: '',
   };
   gui.add(settings, 'morphing', 0, 1, 0.01);
-  const userGui = gui.add(users, 'user', ['Michael', 'Mozhdeh',
-    'Kaushik', 'Siddhant', 'Prashant Collision', 'Prashant']).setValue('Prashant Collision');
+  const userGui = gui.add(users, 'user', ['Michael', 'Mozhdeh', 'Kaushik',
+    'Siddhant', 'Prashant Collision', 'Prashant']).setValue('Prashant Collision');
 
   userGui.onChange(function(value) {
     switch (value) {
@@ -153,17 +152,16 @@ async function main() {
   const dirLight = {
     x: 0.5,
     y: 0,
-    z: 0.9
+    z: 0.9,
   };
-  var LightFolder = gui.addFolder('Light');
+  const LightFolder = gui.addFolder('Light');
   LightFolder.open();
   LightFolder.add(dirLight, 'x', -10, 10, 0.01);
   LightFolder.add(dirLight, 'y', -10, 10, 0.01);
   LightFolder.add(dirLight, 'z', -10, 10, 0.01);
-  
   const lightSettings = {
-    lighting: true
-  }
+    lighting: true,
+  };
   let color = true;
   LightFolder.add(lightSettings, 'lighting').onChange(function (value) {
     lightSettings.lighting = value;
@@ -211,7 +209,6 @@ async function main() {
     }
     uniforms.lightingBoolean.value = lightSettings.lighting;
     uniforms.lightDir.value = dirLight;
-    
     uniforms.iFrame.value = currentFrame;
 
     renderer.render(scene, camera);
@@ -220,9 +217,9 @@ async function main() {
     stats.end();
     requestAnimationFrame(render);
   }
-  document.getElementById("c").addEventListener('mousemove', onMouseMove, false);
-  document.getElementById("c").addEventListener('mousedown', onMouseDown, false);
-  document.getElementById("c").addEventListener('mouseup', onMouseUp, false);
+  document.getElementById('c').addEventListener('mousemove', onMouseMove, false);
+  document.getElementById('c').addEventListener('mousedown', onMouseDown, false);
+  document.getElementById('c').addEventListener('mouseup', onMouseUp, false);
   requestAnimationFrame(render);
 }
 /**
