@@ -107,7 +107,7 @@ float sdMengerBox(vec3 pnt){
     float d = sdBox(pnt,vec3(1.0));
 
         float s = 1.0;
-        for( int m=0; m<3; m++ )
+        for( int m=0; m<4; m++ )
         {
             vec3 a = mod( pnt*s, 2.0 )-1.0;
             s *= 3.0;
