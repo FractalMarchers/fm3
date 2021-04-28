@@ -40,6 +40,54 @@ vec2 hash( vec2 p ) // replace this by something better
 	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
 }
 
+vec3 hash( vec3 p ) // replace this by something better
+{
+	p = vec3( dot(p,vec3(127.1,311.7,232.4)), dot(p,vec3(269.5,183.3,312.1)), dot(p,vec3(162.5,653.3,234.1)) );
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+//Returns 3D noise
+float noise3D( in vec3 x )
+{
+    // grid
+    vec3 p = floor(x);
+    vec3 w = fract(x);
+    
+    // quintic interpolant
+    vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
+
+    
+    // gradients
+    vec3 ga = hash( p+vec3(0.0,0.0,0.0) );
+    vec3 gb = hash( p+vec3(1.0,0.0,0.0) );
+    vec3 gc = hash( p+vec3(0.0,1.0,0.0) );
+    vec3 gd = hash( p+vec3(1.0,1.0,0.0) );
+    vec3 ge = hash( p+vec3(0.0,0.0,1.0) );
+    vec3 gf = hash( p+vec3(1.0,0.0,1.0) );
+    vec3 gg = hash( p+vec3(0.0,1.0,1.0) );
+    vec3 gh = hash( p+vec3(1.0,1.0,1.0) );
+    
+    // projections
+    float va = dot( ga, w-vec3(0.0,0.0,0.0) );
+    float vb = dot( gb, w-vec3(1.0,0.0,0.0) );
+    float vc = dot( gc, w-vec3(0.0,1.0,0.0) );
+    float vd = dot( gd, w-vec3(1.0,1.0,0.0) );
+    float ve = dot( ge, w-vec3(0.0,0.0,1.0) );
+    float vf = dot( gf, w-vec3(1.0,0.0,1.0) );
+    float vg = dot( gg, w-vec3(0.0,1.0,1.0) );
+    float vh = dot( gh, w-vec3(1.0,1.0,1.0) );
+	
+    // interpolation
+    return va + 
+           u.x*(vb-va) + 
+           u.y*(vc-va) + 
+           u.z*(ve-va) + 
+           u.x*u.y*(va-vb-vc+vd) + 
+           u.y*u.z*(va-vc-ve+vg) + 
+           u.z*u.x*(va-vb-ve+vf) + 
+           u.x*u.y*u.z*(-va+vb+vc-vd+ve-vf-vg+vh);
+}
+
 float noiseVoronoi( in vec2 x )
 {
     vec2 p = floor( x );
@@ -74,7 +122,7 @@ float noiseSimplex( in vec2 p )
     return dot( n, vec3(70.0) );
 }
 
-
+// 2D noise
 float fbm( in vec2 x, in float H )
 {    
     float G = exp2(-H);
@@ -90,7 +138,6 @@ float fbm( in vec2 x, in float H )
     return t;
 }
 
-
 float pattern( in vec2 p )
 {
     return fbm(p+ vec2(0.0,0.0),H_const);
@@ -99,7 +146,7 @@ float pattern( in vec2 p )
 float pattern1( in vec2 p )
 {
     vec2 q = vec2( fbm( p + vec2(0.0,0.0),H_const ),
-                   fbm( p + vec2(5.2,1.3),H_const ) );
+                   fbm( p + vec2(5.2,1.3),H_const ));
 
     return fbm( p + 4.0*q, H_const );
 }
@@ -115,9 +162,58 @@ float pattern2( in vec2 p )
     return fbm( p + 4.0*r,H_const );
 }
 
+// 3D noise
+float fbm( in vec3 x, in float H )
+{    
+    float G = exp2(-H);
+    float f = 1.0;
+    float a = 1.0;
+    float t = 0.0;
+    for( int i=0; i<numOctaves; i++ )
+    {
+        t += a*noise3D(f*x);
+        f *= 2.0;
+        a *= G;
+    }
+    return t;
+}
+
+float pattern( in vec3 p )
+{
+    return fbm(p+ vec3(0.0,0.0,0.0),H_const);
+}
+
+float pattern1( in vec3 p )
+{
+    vec3 q = vec3( fbm( p + vec3(0.0,0.0,0.0),H_const ),
+                   fbm( p + vec3(5.2,1.3,2.1),H_const ),
+                   fbm( p + vec3(7.3,0.5,3.6),H_const ));
+
+    return fbm( p + 4.0*q, H_const );
+}
+
+float pattern2( in vec3 p )
+{
+    vec3 q = vec3( fbm( p + vec3(0.0,0.0,0.0),H_const ),
+                   fbm( p + vec3(5.2,1.3,2.1),H_const ),
+                   fbm( p + vec3(7.3,0.5,3.6),H_const ));
+
+    vec3 r = vec3( fbm( p + 4.0*q + vec3(1.7,9.2,5.2),H_const ),
+                   fbm( p + 4.0*q + vec3(8.3,2.8,6.4),H_const ),
+                   fbm( p + 4.0*q + vec3(4.6,3.9,8.4),H_const ));
+
+    return fbm( p + 4.0*r,H_const );
+}
+
 vec2 timeBasedShift(in vec2 st2)
 {
     st2 += 0.03*sin( vec2(0.210,0.590)*iTime*0.25 + length(st2*3.0)*vec2(0.830,0.830));
+    return st2;
+}
+
+vec3 timeBasedShift(in vec3 st2)
+{
+    st2 += 0.03*sin( vec3(0.210,0.590,0.370)*iTime*0.25 + length(st2*3.0)*vec3(0.830,0.830,0.830));
     return st2;
 }
 
@@ -153,7 +249,8 @@ float sdf(in vec3 pnt)
         if(dir)
             dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
 
-        return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
+        //return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
+        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.025;
     }
 
     //Michael
