@@ -160,6 +160,56 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
     return vec3(0.0); // hit nothing, return black.
 }
 
+vec3 reflection(in vec3 cam_pos, in vec3 ray)
+{
+    float reflection_c = 0.25; //eflection coefficient is initially 1
+    int reflection_depth = 3; // the number of reflections, 1 means no reflection
+
+    vec3 col = vec3(0.0);
+    float dist_traveled = 0.0;
+    vec3 reflect_col = vec3(0.0);
+    float hit_flag = 0.0;
+    vec3 cur_pos = cam_pos;
+
+    for (int depth = 0; depth < reflection_depth; depth++)
+    {
+        dist_traveled = 0.0;
+        reflect_col = vec3(0.0);
+        hit_flag = 0.0;
+
+        //ray marching loop
+        for (int i = 0; i < NUMBER_OF_STEPS; i++)
+        {
+            cur_pos = cam_pos + dist_traveled * ray;
+            float dist_to_closest = sdf(cur_pos);
+            if (dist_to_closest < MIN_HIT_DIST)
+            {            
+                reflect_col = lighting(cur_pos, ray);
+                hit_flag = 1.0;
+                break;
+            }
+            if (dist_traveled > MAX_TRACE_DIST)
+            {
+                break;
+            }
+            dist_traveled += dist_to_closest;
+        }
+
+        //no object found, stop reflection
+        if (hit_flag < 1.0) 
+        {
+           break;
+        }
+        
+        col += reflect_col * pow(reflection_c, float (depth));
+        //compute new reflection pos and ray 
+        vec3 N = calc_norm(cur_pos);
+        cam_pos = cur_pos + N * MIN_HIT_DIST;
+        ray = normalize(ray - 2.0 * dot(ray, N) * N);
+    }
+    return col;
+}
+
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
