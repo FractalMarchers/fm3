@@ -1,7 +1,7 @@
 //ray marching fragment shader
 
 #define numOctaves 5
-#define H_const 1.264
+#define H_const 1.0
 
 uniform vec3      iResolution;           // viewport resolution (in pixels)
 //uniform float     iTime;                 // shader playback time (in seconds)
@@ -381,8 +381,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec3 col = ray_march(cam_pos, ray);
 
     // Noise stuff
-    vec3 color = vec3(st,1.0);
     st = (uv+1.0)/2.0;
+    vec3 color = vec3(st,1.0);
     if(user == 3) {
         st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
         fragColor = vec4(vec3(pattern1(st)*color),1.0);
