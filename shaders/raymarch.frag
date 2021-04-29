@@ -96,23 +96,51 @@ vec3 calc_norm(in vec3 point)
     return normalize(vec3(gradient_x, gradient_y, gradient_z));
 }
 
-vec3 lighting(in vec3 cur_pos,vec3 ray)
+
+bool ray_march_hit(in vec3 cam_pos, in vec3 ray)
+{
+    float dist_traveled = 0.0;
+
+    for (int i = 0; i < NUMBER_OF_STEPS; i++)
+    {
+        vec3 cur_pos = cam_pos + dist_traveled * ray;
+        float dist_to_closest = sdf(cur_pos);
+        if (dist_to_closest < MIN_HIT_DIST)
+        {            
+            return true;
+        }
+        if (dist_traveled > MAX_TRACE_DIST)
+        {
+            break;
+        }
+        dist_traveled += dist_to_closest;
+    }
+    return false; // hit nothing, return black.
+}
+
+vec3 lighting(in vec3 cur_pos, in vec3 ray)
 {
     if(lightingBoolean){
-        float ambient = .1;
+        float ambient = 0.3;
         float diffuse_c = 0.6;
-        float specular_c = 0.8;
-        float specular_k = 20.;
+        float specular_c = 0.4;
+        float specular_k = 20.0;
 
         vec4 p = vec4(cur_pos,1.0);
-        //p = opRepeat(p, REPETITION_PERIOD);
+        p = opRepeat(p, REPETITION_PERIOD);
         //replacing cur_pos with p.xyz to have similar lighting for all objects
+        
+        vec3 light_pos = vec3(-5.0, -10.0, -5.0);
         vec3 N = calc_norm(p.xyz);
         vec3 eyeDir = normalize(-ray);
-
-        //diffuse lighting
-        vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
         vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
+
+        bool hit = ray_march_hit(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
+        if (hit == true)
+        {
+            return vec3(0.0);
+        }
+        //diffuse lighting
         float diffuse = max(0.0, dot(N, L)); // lambertian
 
         //specular lighting
@@ -123,13 +151,43 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         vec3 color = vec3(0.0);
         if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
         {
-            color = vec3(0.5,0.4,0.5) * ambient; 
+            //color = vec3(0.55,0.4,0.55) * ambient;
+            color = vec3(1.6)* ambient; 
         }
         else //sphere color
         {
             color = vec3(1.0,1.0,1.0) * ambient;
             color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
             color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+
+            //color change over time
+            
+            if(int((iTime*24.0) / 125.0) % 2 ==1 )
+            {
+                color.x *= float(int((iTime*24.0))%125)/125.0;
+            }
+            else
+            {
+                color.x *= 1.2 - float(int((iTime*24.0))%125)/125.0;
+            }
+            if(int((iTime*10.0) / 125.0) % 2 ==1 )
+            {
+                color.y *= float(int((iTime*10.0))%125)/125.0;
+            }
+            else
+            {
+                color.y *= 1.2 - float(int((iTime*10.0))%125)/125.0;
+            }
+            
+            if(int((iTime*4.0)/ 125.0) % 2 ==1 )
+            {
+                color.z *= float(int(iTime*4.0)%125)/125.0;
+            }
+            else
+            {
+                color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
+            }
+            
         }
         return color;
     }
@@ -137,8 +195,8 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         vec3 N = calc_norm(cur_pos);
         return N * 0.5 + 0.5; 
     }
-    
 }
+
 
 vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 {
@@ -163,7 +221,8 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 
 vec3 reflection(in vec3 cam_pos, in vec3 ray)
 {
-    float reflection_c = 0.25; //reflection coefficient
+
+    float reflection_c = 0.25; 
     int reflection_depth = 3; // the number of reflections, 1 means no reflection
 
     vec3 col = vec3(0.0);
@@ -203,7 +262,6 @@ vec3 reflection(in vec3 cam_pos, in vec3 ray)
         }
         
         col += reflect_col * pow(reflection_c, float (depth));
-        
         //compute new reflection pos and ray 
         vec3 N = calc_norm(cur_pos);
         cam_pos = cur_pos + N * MIN_HIT_DIST;
@@ -223,7 +281,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     ray = rotate(ray, vec3(0.0,1.0, 0.0), mouse.x);
     ray = rotate(ray, vec3(1.0,0.0, 0.0), mouse.y);
 
-    vec3 col = ray_march(cam_pos, ray);
+    //vec3 col = ray_march(cam_pos, ray);
+    vec3 col = reflection(cam_pos, ray);
 
     // Output to screen
     fragColor = vec4(col,1.0);

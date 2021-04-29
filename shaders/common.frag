@@ -12,7 +12,6 @@ float sdSphere(in vec3 p, float sphere_radius)
     return length(p) - sphere_radius;
 }
 
-
 float sdPlane(in vec3 p, in vec3 plane_point, in vec3 plane_N)
 {
     float d = dot(p - plane_point, plane_N);
@@ -86,6 +85,8 @@ float smin( float a, float b, float k ){
 }
 
 
+
+=======
 vec2 fold(vec2 p, float ang){
     vec2 n=vec2(cos(-ang),sin(-ang));
     p-=2.*min(0.,dot(p,n))*n;
