@@ -405,7 +405,7 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
                 }
                 else
                 {
-                    color.x *= 1.2 - float(int((iTime*24.0))%125)/125.0;
+                    color.x *= 1.0 - float(int((iTime*24.0))%125)/125.0;
                 }
                 if(int((iTime*10.0) / 125.0) % 2 ==1 )
                 {
@@ -413,7 +413,7 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
                 }
                 else
                 {
-                    color.y *= 1.2 - float(int((iTime*10.0))%125)/125.0;
+                    color.y *= 1.0 - float(int((iTime*10.0))%125)/125.0;
                 }
                 
                 if(int((iTime*4.0)/ 125.0) % 2 ==1 )
@@ -422,7 +422,7 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
                 }
                 else
                 {
-                    color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
+                    color.z *= 1.0 - float(int(iTime*4.0)%125)/125.0;
                 }
             }
 
