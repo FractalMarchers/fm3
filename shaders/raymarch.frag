@@ -246,7 +246,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
     vec3 ray = normalize(vec3(uv, -1.0));
 
-    vec3 col = ray_march(cam_pos, ray);
+    //vec3 col = ray_march(cam_pos, ray);
+    vec3 col = reflection(cam_pos, ray);
 
     // Output to screen
     fragColor = vec4(col,1.0);
