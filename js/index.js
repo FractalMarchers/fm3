@@ -132,10 +132,10 @@ async function main() {
         currentUser = 2.0;
         break;
       case 'Mozhdeh':
-        currentUser = 3.0;
+        currentUser = 4.0;
         break;
       case 'Kaushik':
-        currentUser = 4.0;
+        currentUser = 3.0;
         break;
       case 'Siddhant':
         currentUser = 5.0;
