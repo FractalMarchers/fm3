@@ -249,7 +249,7 @@ float sdf(in vec3 pnt)
             dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
 
         //return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
-        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.075;
+        return min(sphere,box);
     }
 
     //Michael
