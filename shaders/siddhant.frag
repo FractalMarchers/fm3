@@ -11,9 +11,9 @@ uniform vec4      iMouse;                // mouse pixel coords. xy: current (if 
 uniform vec3      keyboard;
 uniform float     morphing;
 uniform int       user;
+vec2 st;        
 uniform vec3      lightDir; 
 uniform bool      lightingBoolean;
-vec2 st;
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -26,6 +26,7 @@ const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--
 float box_position_x = 0.;
 float sphere_position_x = 0.;
 bool dir = true;
+
 
 //Added by Sid
 // Starts here
@@ -262,38 +263,16 @@ float sdf(in vec3 pnt)
 
     //Siddhant
     if(user == 3){
-        // float sphere = sdSphere(pnt,0.4);
-        // float box = sdBox(pnt,vec3(0.3));
-        // return smin(sphere,box,0.3);
-
-        if(dir)
-            sphere_position_x = pnt.x + 1.5 - iTime/5.;
-        else
-            sphere_position_x = pnt.x - 0.1 + iTime/5.;
-            
-        float sphere = sdSphere(
-            vec3(sphere_position_x,pnt.y,pnt.z),
-            0.4
-        );
-        box_position_x = pnt.x;
-        float box = sdBox(
-            vec3(box_position_x,pnt.y,pnt.z),
-            vec3(0.3)
-        );
-
-        if(dir)
-            dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
-
-        //return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
-        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.075;
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(pnt,vec3(0.3));
+        return smin(sphere,box,0.3);
     }
 
     //Mozhdeh
     if(user == 4){
-        vec4 p = vec4(pnt,1.0);
-        p = opRepeat(p, vec4(4.2,0.0,4.2,0.0)); //infinite repetition
-        float closest = min(sdSphere(p.xyz,SCALE), sdPlane(p.xyz, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0)));
-        return min(INFINITY, closest);
+        float sphere = sdSphere(pnt,0.4);
+        float box = sdBox(pnt,vec3(0.3));
+        return max(-sphere,box);
     }
 
     //Kaushik
@@ -315,51 +294,23 @@ vec3 calc_norm(in vec3 point)
     return normalize(vec3(gradient_x, gradient_y, gradient_z));
 }
 
-
-bool ray_march_hit(in vec3 cam_pos, in vec3 ray)
-{
-    float dist_traveled = 0.0;
-
-    for (int i = 0; i < NUMBER_OF_STEPS; i++)
-    {
-        vec3 cur_pos = cam_pos + dist_traveled * ray;
-        float dist_to_closest = sdf(cur_pos);
-        if (dist_to_closest < MIN_HIT_DIST)
-        {            
-            return true;
-        }
-        if (dist_traveled > MAX_TRACE_DIST)
-        {
-            break;
-        }
-        dist_traveled += dist_to_closest;
-    }
-    return false; // hit nothing, return black.
-}
-
-vec3 lighting(in vec3 cur_pos, in vec3 ray)
+vec3 lighting(in vec3 cur_pos,vec3 ray)
 {
     if(lightingBoolean){
-        float ambient = 0.3;
+        float ambient = .1;
         float diffuse_c = 0.6;
-        float specular_c = 0.4;
-        float specular_k = 20.0;
+        float specular_c = 0.8;
+        float specular_k = 20.;
 
         vec4 p = vec4(cur_pos,1.0);
-        p = opRepeat(p, REPETITION_PERIOD);
+        //p = opRepeat(p, REPETITION_PERIOD);
         //replacing cur_pos with p.xyz to have similar lighting for all objects
-        
-        vec3 light_pos = vec3(-5.0, -10.0, -5.0);
         vec3 N = calc_norm(p.xyz);
         vec3 eyeDir = normalize(-ray);
-        vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
 
-        bool hit = ray_march_hit(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
-        if (hit == true)
-        {
-            return vec3(0.0);
-        }
         //diffuse lighting
+        vec3 light_pos = vec3(lightDir.x,-1.*lightDir.y,lightDir.z);
+        vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
         float diffuse = max(0.0, dot(N, L)); // lambertian
         
 
@@ -367,64 +318,24 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
         vec3 R = 2.0 * dot(N, L) * N - L;
         float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
 
-        //If user is Siddhant add noise to light components to make it fake
-        if(user == 3) {
-            if(diffuse != 0.0) {
-                vec3 lightNoise = vec3(pattern2(timeBasedShift(vec3(ambient,diffuse,specular)))); // with noise
-                ambient += lightNoise.r;
-                diffuse += lightNoise.g;
-                specular += lightNoise.b;
-            }
+        if(diffuse != 0.0) { // this check is required to prevent flashing
+            vec3 lightNoise = vec3(pattern2(timeBasedShift(vec3(ambient,diffuse,specular)))); // with noise
+            ambient += lightNoise.r;
+            diffuse += lightNoise.g;
+            specular += lightNoise.b;
         }
 
         //compute final color for each obj
         vec3 color = vec3(0.0);
         if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
         {
-            //color = vec3(0.55,0.4,0.55) * ambient;
-            color = vec3(1.6)* ambient; 
+            color = vec3(0.5,0.4,0.5) * ambient; 
         }
         else //sphere color
         {
-            // If user is Siddhant add colored light
-            if(user == 3) {
-                color = vec3(1.0,0.0,0.0) * ambient;
-                color += vec3(0.0,1.0,0.0) * diffuse * diffuse_c;
-                color += vec3(0.0,0.0,1.0) * specular * specular_c ;
-            } else {
-                color = vec3(1.0,1.0,1.0) * ambient;
-                color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
-                color += vec3(1.0,1.0,1.0) * specular * specular_c ;
-            
-                //color change over time
-                
-                if(int((iTime*24.0) / 125.0) % 2 ==1 )
-                {
-                    color.x *= float(int((iTime*24.0))%125)/125.0;
-                }
-                else
-                {
-                    color.x *= 1.2 - float(int((iTime*24.0))%125)/125.0;
-                }
-                if(int((iTime*10.0) / 125.0) % 2 ==1 )
-                {
-                    color.y *= float(int((iTime*10.0))%125)/125.0;
-                }
-                else
-                {
-                    color.y *= 1.2 - float(int((iTime*10.0))%125)/125.0;
-                }
-                
-                if(int((iTime*4.0)/ 125.0) % 2 ==1 )
-                {
-                    color.z *= float(int(iTime*4.0)%125)/125.0;
-                }
-                else
-                {
-                    color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
-                }
-            }
-
+            color = vec3(1.0,0.0,0.0) * ambient;
+            color += vec3(0.0,1.0,0.0) * diffuse * diffuse_c;
+            color += vec3(0.0,0.0,1.0) * specular * specular_c ;
         }
         return color;
     }
@@ -432,8 +343,8 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
         vec3 N = calc_norm(cur_pos);
         return N * 0.5 + 0.5; 
     }
+    
 }
-
 
 vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 {
@@ -456,57 +367,6 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
     return vec3(0.0); // hit nothing, return black.
 }
 
-vec3 reflection(in vec3 cam_pos, in vec3 ray)
-{
-
-    float reflection_c = 0.25; 
-    int reflection_depth = 3; // the number of reflections, 1 means no reflection
-
-    vec3 col = vec3(0.0);
-    float dist_traveled = 0.0;
-    vec3 reflect_col = vec3(0.0);
-    float hit_flag = 0.0;
-    vec3 cur_pos = cam_pos;
-
-    for (int depth = 0; depth < reflection_depth; depth++)
-    {
-        dist_traveled = 0.0;
-        reflect_col = vec3(0.0);
-        hit_flag = 0.0;
-
-        //ray marching loop
-        for (int i = 0; i < NUMBER_OF_STEPS; i++)
-        {
-            cur_pos = cam_pos + dist_traveled * ray;
-            float dist_to_closest = sdf(cur_pos);
-            if (dist_to_closest < MIN_HIT_DIST)
-            {            
-                reflect_col = lighting(cur_pos, ray);
-                hit_flag = 1.0;
-                break;
-            }
-            if (dist_traveled > MAX_TRACE_DIST)
-            {
-                break;
-            }
-            dist_traveled += dist_to_closest;
-        }
-
-        //no object found, stop reflection
-        if (hit_flag < 1.0) 
-        {
-           break;
-        }
-        
-        col += reflect_col * pow(reflection_c, float (depth));
-        //compute new reflection pos and ray 
-        vec3 N = calc_norm(cur_pos);
-        cam_pos = cur_pos + N * MIN_HIT_DIST;
-        ray = normalize(ray - 2.0 * dot(ray, N) * N);
-    }
-    return col;
-}
-
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
@@ -518,20 +378,25 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     ray = rotate(ray, vec3(0.0,1.0, 0.0), mouse.x);
     ray = rotate(ray, vec3(1.0,0.0, 0.0), mouse.y);
 
-    //vec3 col = ray_march(cam_pos, ray);
-    vec3 col = reflection(cam_pos, ray);
-
-    // Output to screen
-    fragColor = vec4(col,1.0);
+    vec3 col = ray_march(cam_pos, ray);
 
     // Noise stuff
-    bool show2DNoise = false;
     st = (uv+1.0)/2.0;
     vec3 color = vec3(st,1.0);
-    if(user == 3 && show2DNoise) {
+    if(user == 3) {
         st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
         fragColor = vec4(vec3(pattern1(st)*color),1.0);
     }
+    else {
+        // Output to screen
+        fragColor = vec4(col,1.0);
+
+        // Adding noise to screen to create fog
+        //st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
+        //fragColor += vec4(vec3(pattern(st)*color),1.0);
+    }
+    
+    
 }
 
 void main() 
