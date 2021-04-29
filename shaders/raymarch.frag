@@ -14,6 +14,7 @@ uniform int       user;
 vec2 st;        
 uniform vec3      lightDir; 
 uniform bool      lightingBoolean;
+vec2 st;
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -26,7 +27,6 @@ const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--
 float box_position_x = 0.;
 float sphere_position_x = 0.;
 bool dir = true;
-
 
 //Added by Sid
 // Starts here
@@ -263,9 +263,30 @@ float sdf(in vec3 pnt)
 
     //Siddhant
     if(user == 3){
-        float sphere = sdSphere(pnt,0.4);
-        float box = sdBox(pnt,vec3(0.3));
-        return smin(sphere,box,0.3);
+        // float sphere = sdSphere(pnt,0.4);
+        // float box = sdBox(pnt,vec3(0.3));
+        // return smin(sphere,box,0.3);
+
+        if(dir)
+            sphere_position_x = pnt.x + 1.5 - iTime/5.;
+        else
+            sphere_position_x = pnt.x - 0.1 + iTime/5.;
+            
+        float sphere = sdSphere(
+            vec3(sphere_position_x,pnt.y,pnt.z),
+            0.4
+        );
+        box_position_x = pnt.x;
+        float box = sdBox(
+            vec3(box_position_x,pnt.y,pnt.z),
+            vec3(0.3)
+        );
+
+        if(dir)
+            dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
+
+        //return min(sphere,box) + pattern1(timeBasedShift(vec2(abs(sin(pnt.x)),abs(sin(pnt.y*pnt.z)))))*0.025;
+        return min(sphere,box) + pattern1(timeBasedShift(pnt))*0.075;
     }
 
     //Mozhdeh
@@ -318,11 +339,14 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         vec3 R = 2.0 * dot(N, L) * N - L;
         float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
 
-        if(diffuse != 0.0) { // this check is required to prevent flashing
-            vec3 lightNoise = vec3(pattern2(timeBasedShift(vec3(ambient,diffuse,specular)))); // with noise
-            ambient += lightNoise.r;
-            diffuse += lightNoise.g;
-            specular += lightNoise.b;
+        //If user is Siddhant add noise to light components to make it fake
+        if(user == 3) {
+            if(diffuse != 0.0) {
+                vec3 lightNoise = vec3(pattern2(timeBasedShift(vec3(ambient,diffuse,specular)))); // with noise
+                ambient += lightNoise.r;
+                diffuse += lightNoise.g;
+                specular += lightNoise.b;
+            }
         }
 
         //compute final color for each obj
@@ -333,9 +357,17 @@ vec3 lighting(in vec3 cur_pos,vec3 ray)
         }
         else //sphere color
         {
-            color = vec3(1.0,0.0,0.0) * ambient;
-            color += vec3(0.0,1.0,0.0) * diffuse * diffuse_c;
-            color += vec3(0.0,0.0,1.0) * specular * specular_c ;
+            // If user is Siddhant add colored light
+            if(user == 3) {
+                color = vec3(1.0,0.0,0.0) * ambient;
+                color += vec3(0.0,1.0,0.0) * diffuse * diffuse_c;
+                color += vec3(0.0,0.0,1.0) * specular * specular_c ;
+            } else {
+                color = vec3(1.0,1.0,1.0) * ambient;
+                color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
+                color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+            }
+            
         }
         return color;
     }
@@ -380,23 +412,17 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     vec3 col = ray_march(cam_pos, ray);
 
+    // Output to screen
+    fragColor = vec4(col,1.0);
+
     // Noise stuff
+    bool show2DNoise = false;
     st = (uv+1.0)/2.0;
     vec3 color = vec3(st,1.0);
-    if(user == 3) {
+    if(user == 3 && show2DNoise) {
         st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
         fragColor = vec4(vec3(pattern1(st)*color),1.0);
     }
-    else {
-        // Output to screen
-        fragColor = vec4(col,1.0);
-
-        // Adding noise to screen to create fog
-        //st += 0.03*sin( vec2(0.210,0.590)*iTime*3.216 + length(st*3.0)*vec2(0.830,0.830));
-        //fragColor += vec4(vec3(pattern(st)*color),1.0);
-    }
-    
-    
 }
 
 void main() 
