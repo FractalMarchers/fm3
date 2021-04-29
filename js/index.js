@@ -151,9 +151,9 @@ async function main() {
 
 
   const dirLight = {
-    x: 0.5,
-    y: 0,
-    z: 0.9
+    x: -5.,
+    y: -10,
+    z: -5.
   };
   var LightFolder = gui.addFolder('Light');
   LightFolder.open();
