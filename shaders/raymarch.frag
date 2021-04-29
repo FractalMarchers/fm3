@@ -396,7 +396,6 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
                 color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
                 color += vec3(1.0,1.0,1.0) * specular * specular_c ;
             
-
                 //color change over time
                 
                 if(int((iTime*24.0) / 125.0) % 2 ==1 )
@@ -424,8 +423,8 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
                 {
                     color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
                 }
-            
             }
+
         }
         return color;
     }
