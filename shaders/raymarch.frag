@@ -71,6 +71,27 @@ vec3 calc_norm(in vec3 point)
     return normalize(vec3(gradient_x, gradient_y, gradient_z));
 }
 
+bool ray_march_hit(in vec3 cam_pos, in vec3 ray)
+{
+    float dist_traveled = 0.0;
+
+    for (int i = 0; i < NUMBER_OF_STEPS; i++)
+    {
+        vec3 cur_pos = cam_pos + dist_traveled * ray;
+        float dist_to_closest = sdf(cur_pos);
+        if (dist_to_closest < MIN_HIT_DIST)
+        {            
+            return true;
+        }
+        if (dist_traveled > MAX_TRACE_DIST)
+        {
+            break;
+        }
+        dist_traveled += dist_to_closest;
+    }
+    return false; // hit nothing, return black.
+}
+
 vec3 lighting(in vec3 cur_pos, in vec3 ray)
 {
     float ambient = 0.3;
