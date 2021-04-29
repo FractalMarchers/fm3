@@ -1,13 +1,15 @@
 //ray marching fragment shader
 
 uniform vec3      iResolution;           // viewport resolution (in pixels)
-uniform float     iTime;                 // shader playback time (in seconds)
+//uniform float     iTime;                 // shader playback time (in seconds)
 uniform float     iTimeDelta;            // render time (in seconds)
 uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
 uniform vec3      keyboard;
 uniform float     morphing;
-uniform int       user; 
+uniform int       user;
+uniform vec3      lightDir; 
+uniform bool      lightingBoolean;
 
 const float INFINITY = 1e20;
 const int   NUMBER_OF_STEPS = 100;
@@ -17,16 +19,39 @@ const int ITERATIONS = 5; // how many times to fold
 const float SCALE = 1.0; // size of sdf shapes
 const float OFFSET = 1.0; // offset for any sdf that uses distance shifting
 const vec4 REPETITION_PERIOD = vec4(16.0,5.0,8.0,12.0); // how often to repeat--higher numbers repeat less often
-
+float box_position_x = 0.;
+float sphere_position_x = 0.;
+bool dir = true;
 // returns distance to nearest object in the world
 float sdf(in vec3 pnt)
 {   
     //Prashant
+    if(user == 6){
+        float mengerBox = sdMengerBox(pnt);
+        vec3 pnt = tri_curve(pnt);
+        float mengerBoxFold = sdMengerBox(pnt*0.004);
+        return mix(mengerBox,mengerBoxFold,morphing);
+    }
     if(user == 1){
-        vec3 p1 = rotate(pnt,vec3(1.),iTime/5.);
-        float sphere = sdSphere(pnt,0.4);
-        float box = sdBox(p1,vec3(0.3));
-        return mix(sphere,box,0.5);
+        if(dir)
+            sphere_position_x = pnt.x + 1.5 - iTime/5.;
+        else
+            sphere_position_x = pnt.x - 0.1 + iTime/5.;
+            
+        float sphere = sdSphere(
+            vec3(sphere_position_x,pnt.y,pnt.z),
+            0.4
+        );
+        box_position_x = pnt.x;
+        float box = sdBox(
+            vec3(box_position_x,pnt.y,pnt.z),
+            vec3(0.3)
+        );
+
+        if(dir)
+            dir = ray_march_sphere(vec3(sphere_position_x-0.4-0.3,pnt.y,pnt.z),box_position_x);
+
+        return min(sphere,box);
     }
 
     //Michael
@@ -71,6 +96,7 @@ vec3 calc_norm(in vec3 point)
     return normalize(vec3(gradient_x, gradient_y, gradient_z));
 }
 
+
 bool ray_march_hit(in vec3 cam_pos, in vec3 ray)
 {
     float dist_traveled = 0.0;
@@ -94,78 +120,83 @@ bool ray_march_hit(in vec3 cam_pos, in vec3 ray)
 
 vec3 lighting(in vec3 cur_pos, in vec3 ray)
 {
-    float ambient = 0.3;
-    float diffuse_c = 0.6;
-    float specular_c = 0.4;
-    float specular_k = 20.0;
+    if(lightingBoolean){
+        float ambient = 0.3;
+        float diffuse_c = 0.6;
+        float specular_c = 0.4;
+        float specular_k = 20.0;
 
-    vec4 p = vec4(cur_pos,1.0);
-    p = opRepeat(p, REPETITION_PERIOD);
-    //replacing cur_pos with p.xyz to have similar lighting for all objects
-    
-    vec3 light_pos = vec3(-5.0, -10.0, -5.0);
-    vec3 N = calc_norm(p.xyz);
-    vec3 eyeDir = normalize(-ray);
-    vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
-
-    bool hit = ray_march_hit(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
-    if (hit == true)
-    {
-        return vec3(0.0);
-    }
-    //diffuse lighting
-    float diffuse = max(0.0, dot(N, L)); // lambertian
-
-    //specular lighting
-    vec3 R = 2.0 * dot(N, L) * N - L;
-    float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
-
-    //compute final color for each obj
-    vec3 color = vec3(0.0);
-    if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
-    {
-        //color = vec3(0.55,0.4,0.55) * ambient;
-        color = vec3(1.6)* ambient; 
-    }
-    else //sphere color
-    {
-        color = vec3(1.0,1.0,1.0) * ambient;
-        color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
-        color += vec3(1.0,1.0,1.0) * specular * specular_c ;
-
-        //color change over time
+        vec4 p = vec4(cur_pos,1.0);
+        p = opRepeat(p, REPETITION_PERIOD);
+        //replacing cur_pos with p.xyz to have similar lighting for all objects
         
-        if(int((iTime*24.0) / 125.0) % 2 ==1 )
+        vec3 light_pos = vec3(-5.0, -10.0, -5.0);
+        vec3 N = calc_norm(p.xyz);
+        vec3 eyeDir = normalize(-ray);
+        vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
+
+        bool hit = ray_march_hit(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
+        if (hit == true)
         {
-            color.x *= float(int((iTime*24.0))%125)/125.0;
+            return vec3(0.0);
         }
-        else
+        //diffuse lighting
+        float diffuse = max(0.0, dot(N, L)); // lambertian
+
+        //specular lighting
+        vec3 R = 2.0 * dot(N, L) * N - L;
+        float specular = pow( max(dot(R, eyeDir), 0.0), specular_k) ;
+
+        //compute final color for each obj
+        vec3 color = vec3(0.0);
+        if( abs(p.y + 1.0) < MIN_HIT_DIST ) //plane color
         {
-            color.x *= 1.2 - float(int((iTime*24.0))%125)/125.0;
+            //color = vec3(0.55,0.4,0.55) * ambient;
+            color = vec3(1.6)* ambient; 
         }
-        if(int((iTime*10.0) / 125.0) % 2 ==1 )
+        else //sphere color
         {
-            color.y *= float(int((iTime*10.0))%125)/125.0;
+            color = vec3(1.0,1.0,1.0) * ambient;
+            color += vec3(1.0,1.0,1.0) * diffuse * diffuse_c;
+            color += vec3(1.0,1.0,1.0) * specular * specular_c ;
+
+            //color change over time
+            
+            if(int((iTime*24.0) / 125.0) % 2 ==1 )
+            {
+                color.x *= float(int((iTime*24.0))%125)/125.0;
+            }
+            else
+            {
+                color.x *= 1.2 - float(int((iTime*24.0))%125)/125.0;
+            }
+            if(int((iTime*10.0) / 125.0) % 2 ==1 )
+            {
+                color.y *= float(int((iTime*10.0))%125)/125.0;
+            }
+            else
+            {
+                color.y *= 1.2 - float(int((iTime*10.0))%125)/125.0;
+            }
+            
+            if(int((iTime*4.0)/ 125.0) % 2 ==1 )
+            {
+                color.z *= float(int(iTime*4.0)%125)/125.0;
+            }
+            else
+            {
+                color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
+            }
+            
         }
-        else
-        {
-            color.y *= 1.2 - float(int((iTime*10.0))%125)/125.0;
-        }
-        
-        if(int((iTime*4.0)/ 125.0) % 2 ==1 )
-        {
-            color.z *= float(int(iTime*4.0)%125)/125.0;
-        }
-        else
-        {
-            color.z *= 1.2 - float(int(iTime*4.0)%125)/125.0;
-        }
-        
+        return color;
     }
-    return color;
-    //since normal will be -1 to 1, "normalize" returned color to 0 to 1
-    //return N * 0.5 + 0.5; 
+    else{
+        vec3 N = calc_norm(cur_pos);
+        return N * 0.5 + 0.5; 
+    }
 }
+
 
 vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 {
@@ -177,7 +208,7 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
         float dist_to_closest = sdf(cur_pos);
         if (dist_to_closest < MIN_HIT_DIST)
         {            
-            return lighting(cur_pos);
+            return lighting(cur_pos,ray);
         }
         if (dist_traveled > MAX_TRACE_DIST)
         {
@@ -190,6 +221,7 @@ vec3 ray_march(in vec3 cam_pos, in vec3 ray)
 
 vec3 reflection(in vec3 cam_pos, in vec3 ray)
 {
+
     float reflection_c = 0.25; 
     int reflection_depth = 3; // the number of reflections, 1 means no reflection
 
@@ -242,9 +274,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1) then remap to -1 to 1
     vec2 uv = (fragCoord/iResolution.xy)*2.0 - 1.0;
-    vec3 cam_pos = vec3((iMouse.x/iResolution.x)*MAX_TRACE_DIST+keyboard.x, 0.0+keyboard.y, (iMouse.y/iResolution.y)*(MAX_TRACE_DIST-2.0)+1.0+keyboard.z); //our "camera" position
+    vec2 mouse = (iMouse.xy/iResolution.xy)*10.0;
+    vec3 cam_pos = vec3(keyboard.x, keyboard.y, keyboard.z); //our "camera" position
     // vec3 cam_pos = vec3(0.0, 0.0, 2.0);
     vec3 ray = normalize(vec3(uv, -1.0));
+    ray = rotate(ray, vec3(0.0,1.0, 0.0), mouse.x);
+    ray = rotate(ray, vec3(1.0,0.0, 0.0), mouse.y);
 
     //vec3 col = ray_march(cam_pos, ray);
     vec3 col = reflection(cam_pos, ray);
