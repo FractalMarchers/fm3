@@ -86,7 +86,6 @@ float smin( float a, float b, float k ){
 
 
 
-=======
 vec2 fold(vec2 p, float ang){
     vec2 n=vec2(cos(-ang),sin(-ang));
     p-=2.*min(0.,dot(p,n))*n;
