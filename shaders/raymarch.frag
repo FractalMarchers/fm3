@@ -72,7 +72,7 @@ float sdf(in vec3 pnt)
     //Mozhdeh
     if(user == 4){
         vec4 p = vec4(pnt,1.0);
-        p = opRepeat(p, REPETITION_PERIOD); //infinite repetition
+        p = opRepeat(p, vec4(4.2,0.0,4.2,0.0)); //infinite repetition
         float closest = min(sdSphere(p.xyz,SCALE), sdPlane(p.xyz, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0)));
         return min(INFINITY, closest);
     }
