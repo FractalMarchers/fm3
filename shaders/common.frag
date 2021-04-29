@@ -12,6 +12,12 @@ float sdSphere(in vec3 p, float sphere_radius)
     return length(p) - sphere_radius;
 }
 
+float sdPlane(in vec3 p, in vec3 plane_point, in vec3 plane_N)
+{
+    float d = dot(p - plane_point, plane_N);
+    return d;
+}
+
 float sdBox(vec3 p, vec3 dimensions)
 {
   vec3 q = abs(p) - dimensions;
@@ -79,6 +85,7 @@ float smin( float a, float b, float k ){
 }
 
 
+
 vec2 fold(vec2 p, float ang){
     vec2 n=vec2(cos(-ang),sin(-ang));
     p-=2.*min(0.,dot(p,n))*n;
@@ -107,7 +114,7 @@ float sdMengerBox(vec3 pnt){
     float d = sdBox(pnt,vec3(1.0));
 
         float s = 1.0;
-        for( int m=0; m<3; m++ )
+        for( int m=0; m<4; m++ )
         {
             vec3 a = mod( pnt*s, 2.0 )-1.0;
             s *= 3.0;
