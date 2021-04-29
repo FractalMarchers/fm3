@@ -135,7 +135,7 @@ vec3 lighting(in vec3 cur_pos, in vec3 ray)
         vec3 eyeDir = normalize(-ray);
         vec3 L = normalize(p.xyz - light_pos); // vector pointing to light
 
-        bool hit = ray_march_hit(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
+        bool hit = reflection(cur_pos + N * MIN_HIT_DIST * 4.0, L);// + 
         if (hit == true)
         {
             return vec3(0.0);
